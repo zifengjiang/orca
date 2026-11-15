@@ -4,7 +4,10 @@ import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
-import type { DiscoveredSkill, SkillDiscoveryResult } from '../../../../shared/skills'
+import type {
+  DiscoveredSkill,
+  SkillDiscoveryResult
+} from '../../../../shared/skills/discovery/skills'
 import { createCompatibleRuntimeStatusResponseIfNeeded } from '@/runtime/rpc/testing/runtime-compatibility-test-fixture'
 import { clearRuntimeCompatibilityCache as clearRuntimeCompatibilityCacheForTests } from '@/runtime/rpc/compatibility/runtime-compatibility-cache'
 import { TooltipProvider } from '@/components/ui/tooltip'
