@@ -1,0 +1,83 @@
+src/renderer/src/lib/plugin-icons/plugin-icon-svg.ts
+  12289751dedb3483 1-5,7,62,71-72
+src/shared/plugins/contributions/plugin-panel-icon.test.ts
+  12289751dedb3483 1-124
+src/shared/plugins/manifest/plugin-manifest.test.ts
+  12289751dedb3483 2-6,60-97
+src/shared/plugins/contributions/plugin-panel-icon-svg.ts
+  12289751dedb3483 1-263
+src/shared/plugins/images/plugin-image-url.ts
+  12289751dedb3483 24-26,57,66-71
+src/shared/plugins/contributions/plugin-panel-icon-file.ts
+  12289751dedb3483 1-27
+docs/reference/plugin-authoring.md
+  12289751dedb3483 208-218
+src/shared/plugins/plugin-list-entry.ts
+  12289751dedb3483 12,14-15
+src/main/plugins/artifacts/plugin-artifact-validation.ts
+  12289751dedb3483 13,15-18,58-63,214-216
+docs/schemas/plugins/orca-plugin.v2.schema.json
+  12289751dedb3483 486,489-491,523-594
+skill-guides/orca-plugin-authoring/references/manifest.md
+  12289751dedb3483 61
+src/shared/plugins/contributions/plugin-panel-contribution.ts
+  12289751dedb3483 8,13,17-21,24,51-58
+src/shared/plugins/contributions/plugin-panel-icon.ts
+  12289751dedb3483 1-132
+src/shared/plugins/manifest/plugin-schema-field-docs.ts
+  12289751dedb3483 10-11
+src/renderer/src/components/plugins/plugin-panel-icon.tsx
+  12289751dedb3483 1-134
+src/shared/plugins/contributions/plugin-panel-icon-format.ts
+  12289751dedb3483 1-11
+src/main/plugins/media/plugin-image-protocol.ts
+  12289751dedb3483 14,36-40
+docs/reference/plugin-manifest.md
+  12289751dedb3483 70
+src/shared/plugins/images/plugin-image-url.test.ts
+  12289751dedb3483 2-7,23-31
+src/main/plugins/discovery/plugin-list-projection.ts
+  12289751dedb3483 32,193,197-207
+src/shared/plugins/manifest/plugin-manifest-v2-rules.ts
+  12289751dedb3483 11,18,73-95
+examples/plugins/panel-icons/src/panel.js
+  12289751dedb3483 1-6
+src/shared/plugins/manifest/plugin-manifest.ts
+  12289751dedb3483 20,214
+examples/plugins/panel-icons/orca-plugin.json
+  12289751dedb3483 1-36
+CHANGELOG.md
+  12289751dedb3483 1-6
+examples/plugins/panel-icons/icons/panel.svg
+  12289751dedb3483 1-3
+src/cli/skills/bundled-skill-guides.ts
+  12289751dedb3483 3329
+src/main/plugins/media/plugin-panel-icon-artifacts.test.ts
+  12289751dedb3483 1-71
+src/main/plugins/media/plugin-panel-icon-artifacts.ts
+  12289751dedb3483 1-80
+src/cli/plugins/authoring/plugin-panel-icon-fixture.test.ts
+  12289751dedb3483 1-30
+src/renderer/src/components/right-sidebar/plugin-panels/plugin-panel-activity-items.ts
+  12289751dedb3483 3,7-11,21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "012378c7022ca6b4ca5c85efb250620e2132a2a2",
+  "prompts": {
+    "12289751dedb3483": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1de31-d7f1-73e2-b4c2-a08f8848f6a2",
+        "model": "deepseek/deepseek-flash"
+      },
+      "human_author": "jeffjiang",
+      "messages": [],
+      "total_additions": 2111,
+      "total_deletions": 572,
+      "accepted_lines": 1785,
+      "overriden_lines": 0
+    }
+  }
+}
