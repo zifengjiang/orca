@@ -1,8 +1,8 @@
+import { useTranslate } from '@/i18n/use-translate'
 import type React from 'react'
+import { ProviderDetailsMenu } from '../usage/ProviderDetailsMenu'
 import type { ProviderRateLimits } from '../../../../../shared/rate-limit-types'
 import type { ChatAccountAction } from './ProviderAccountChatButton'
-import { useAppStore } from '../../../store/index'
-import { defaultScopeHost } from '@/runtime/hosts/selection/default-creation-host'
 import { useActiveAccountOwner } from '@/runtime/provider-accounts/ownership/use-active-account-owner'
 import { ClaudeSwitcherForOwner } from './ClaudeSwitcherForOwner'
 import { getProviderAccountsOwnerKey } from '@/runtime/provider-accounts/observations/runtime-provider-accounts-client'
@@ -29,8 +29,23 @@ export function ClaudeSwitcherMenu(props: ClaudeSwitcherMenuProps): React.JSX.El
 }
 
 function FocusedClaudeSwitcher(props: ClaudeSwitcherMenuProps): React.JSX.Element | null {
-  const settings = useAppStore((s) => s.settings)
-  const owner = useActiveAccountOwner(defaultScopeHost(settings))
+  const t = useTranslate()
+  const owner = useActiveAccountOwner({ kind: 'local' })
+  if (!owner) {
+    return (
+      <ProviderDetailsMenu
+        provider={props.claude}
+        compact={props.compact}
+        iconOnly={props.iconOnly}
+        asSubmenu={props.asSubmenu}
+        triggerContent={props.triggerContent}
+        ariaLabel={t(
+          'auto.components.status.bar.StatusBar.3dd7ddfae1',
+          'Open Claude details and account switcher'
+        )}
+      />
+    )
+  }
   return (
     <ClaudeSwitcherForOwner
       key={`${getProviderAccountsOwnerKey(owner.target)}:${owner.wslHostDistro ?? ''}`}

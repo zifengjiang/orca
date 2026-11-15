@@ -15,7 +15,7 @@ type Handlers = {
 type Watcher = { target: RuntimeClientTarget; handlers: Handlers; closed: boolean }
 
 const mocks = vi.hoisted(() => {
-  const state: { owner: RuntimeClientTarget; watchers: Watcher[]; callRuntimeRpc: Mock } = {
+  const state: { owner: RuntimeClientTarget | null; watchers: Watcher[]; callRuntimeRpc: Mock } = {
     owner: { kind: 'local' },
     watchers: [],
     callRuntimeRpc: vi.fn()
@@ -23,8 +23,8 @@ const mocks = vi.hoisted(() => {
   return state
 })
 
-vi.mock('../../../runtime/provider-accounts/ownership/use-active-account-owner', () => ({
-  useActiveAccountOwner: () => ({ target: mocks.owner, wslHostDistro: null })
+vi.mock('@/runtime/provider-accounts/ownership/use-active-account-owner', () => ({
+  useActiveAccountOwner: () => (mocks.owner ? { target: mocks.owner, wslHostDistro: null } : null)
 }))
 vi.mock('@/runtime/rpc/calls/runtime-rpc-call', () => ({
   callRuntimeRpc: mocks.callRuntimeRpc
@@ -98,7 +98,7 @@ describe('useOwnerUsageRateLimits', () => {
     expect(result.current.rateLimits.claude?.session).toBeNull()
   })
 
-  it('ignores a refresh that completes after the owner changed', async () => {
+  it('ignores a refresh from an earlier activation after returning to the same owner', async () => {
     mocks.owner = { kind: 'environment', environmentId: 'mini' }
     let resolveRefresh: (value: ProviderAccountsSnapshot) => void = () => {}
     mocks.callRuntimeRpc.mockReturnValue(
@@ -110,8 +110,10 @@ describe('useOwnerUsageRateLimits', () => {
     const pending = result.current.refreshRemote?.()
     mocks.owner = { kind: 'environment', environmentId: 'devbox' }
     rerender()
+    mocks.owner = { kind: 'environment', environmentId: 'mini' }
+    rerender()
     act(() =>
-      mocks.watchers[1].handlers.onSnapshot(
+      mocks.watchers[2].handlers.onSnapshot(
         snapshot(createEmptyRateLimitState({ claude: provider('claude', 20) }))
       )
     )
@@ -120,5 +122,14 @@ describe('useOwnerUsageRateLimits', () => {
       await pending
     })
     expect(result.current.rateLimits.claude?.session?.usedPercent).toBe(20)
+  })
+  it('withholds local usage and refresh when a visible owner has no account transport', async () => {
+    mocks.owner = null
+    const { result } = renderHook(() => useOwnerUsageRateLimits(local))
+    expect(result.current.rateLimits.claude?.session).toBeNull()
+    expect(result.current.remoteOwner?.environmentId).toBeNull()
+    await result.current.refreshRemote?.()
+    expect(mocks.callRuntimeRpc).not.toHaveBeenCalled()
+    expect(mocks.watchers).toEqual([])
   })
 })

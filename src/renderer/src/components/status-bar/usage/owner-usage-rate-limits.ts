@@ -32,7 +32,7 @@ export type OwnerUsageState =
     }
 
 /** A host that answers without usage is reachable, so "cannot reach" would be false. */
-export type OwnerUsageFailureReason = 'unreachable' | 'usage-not-published'
+export type OwnerUsageFailureReason = 'unreachable' | 'usage-not-published' | 'unsupported-owner'
 
 type UsageProviderKey = {
   [K in keyof RateLimitState]-?: RateLimitState[K] extends ProviderRateLimits | null ? K : never
@@ -71,6 +71,13 @@ function describeUnverifiableOwner(
   reason: OwnerUsageFailureReason,
   t: Translate = translate
 ): string {
+  if (reason === 'unsupported-owner') {
+    return t(
+      'auto.components.status.bar.tooltip.unsupportedOwner',
+      'Usage unavailable for {{server}}',
+      { server: ownerLabel }
+    )
+  }
   return reason === 'usage-not-published'
     ? t(
         'auto.components.status.bar.tooltip.remoteOwnerNoUsage',

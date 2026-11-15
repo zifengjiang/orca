@@ -1,3 +1,5 @@
+import { useActiveAccountOwner } from '@/runtime/provider-accounts/ownership/use-active-account-owner'
+import type { AccountOwner } from '@/runtime/provider-accounts/ownership/wsl-host-account-owner'
 import React from 'react'
 import { CodexResetCredits, CodexResetConfirmation } from './CodexResetCredits'
 import { DropdownMenuItem, DropdownMenuLabel } from '@/components/ui/dropdown-menu'
@@ -18,13 +20,54 @@ import { AccountSwitchSection } from './AccountSwitchList'
 import { AccountSwitchRowItem } from './AccountSwitchRowItem'
 import { useCodexSwitcherController } from './use-codex-switcher-controller'
 
-export function CodexSwitcherMenu({
+type CodexSwitcherProps = {
+  codex: ProviderRateLimits
+  compact: boolean
+  iconOnly: boolean
+  asSubmenu?: boolean
+  triggerContent?: React.ReactNode
+}
+
+export function CodexSwitcherMenu(props: CodexSwitcherProps): React.JSX.Element {
+  const t = useTranslate()
+  const owner = useActiveAccountOwner({ kind: 'local' })
+  if (!owner) {
+    return (
+      <ProviderDetailsMenu
+        provider={props.codex}
+        compact={props.compact}
+        iconOnly={props.iconOnly}
+        asSubmenu={props.asSubmenu}
+        triggerContent={props.triggerContent}
+        ariaLabel={t(
+          'auto.components.status.bar.StatusBar.ba55303942',
+          'Open Codex details and account switcher'
+        )}
+      />
+    )
+  }
+  return (
+    <CodexSwitcherForOwner
+      {...props}
+      owner={owner}
+      key={
+        owner.target.kind === 'environment'
+          ? owner.target.environmentId
+          : `local:${owner.wslHostDistro ?? ''}`
+      }
+    />
+  )
+}
+
+function CodexSwitcherForOwner({
   codex,
   compact,
   iconOnly,
   asSubmenu = false,
-  triggerContent
+  triggerContent,
+  owner
 }: {
+  owner: AccountOwner
   codex: ProviderRateLimits
   compact: boolean
   iconOnly: boolean
@@ -58,7 +101,7 @@ export function CodexSwitcherMenu({
     setSkipFutureResetConfirm,
     skipFutureResetConfirm,
     switchGroups
-  } = useCodexSwitcherController(codex)
+  } = useCodexSwitcherController(codex, owner)
 
   const isBusy = isSwitching || reauthenticatingAccountId !== null
   const rows = (selectedGroup?.targets ?? []).map((target) => {

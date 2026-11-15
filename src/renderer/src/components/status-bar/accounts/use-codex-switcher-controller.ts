@@ -2,8 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CodexRateLimitAccountsState } from '../../../../../shared/managed-account-types'
 import type { ProviderRateLimits } from '../../../../../shared/rate-limit-types'
 import { useAppStore } from '../../../store/index'
-import { defaultScopeHost } from '@/runtime/hosts/selection/default-creation-host'
-import { useActiveAccountOwner } from '@/runtime/provider-accounts/ownership/use-active-account-owner'
+import type { AccountOwner } from '@/runtime/provider-accounts/ownership/wsl-host-account-owner'
 import { runtimeTargetEnvironmentId } from '@/runtime/rpc/targets/runtime-client-target'
 import {
   fetchProviderAccountsSnapshot,
@@ -36,7 +35,7 @@ import {
 } from './status-bar-codex-accounts'
 import { signInCodexAccount } from './codex-sign-in-action'
 
-export function useCodexSwitcherController(codex: ProviderRateLimits) {
+export function useCodexSwitcherController(codex: ProviderRateLimits, owner: AccountOwner) {
   const t = useTranslate()
   const [open, setOpen] = useState(false)
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false)
@@ -62,7 +61,7 @@ export function useCodexSwitcherController(codex: ProviderRateLimits) {
   const codexTarget = useAppStore((s) => s.rateLimits.codexTarget)
   const settings = useAppStore((s) => s.settings)
   const runtimeEnvironments = useAppStore((s) => s.runtimeEnvironments)
-  const { target: runtimeTarget, wslHostDistro } = useActiveAccountOwner(defaultScopeHost(settings))
+  const { target: runtimeTarget, wslHostDistro } = owner
   const activeRuntimeEnvironmentId = runtimeTargetEnvironmentId(runtimeTarget)
   const hasActiveRuntimeEnvironment = activeRuntimeEnvironmentId !== null
   const providerAccountHostLabel = hasActiveRuntimeEnvironment

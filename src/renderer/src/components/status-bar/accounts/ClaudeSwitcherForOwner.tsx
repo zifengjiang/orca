@@ -240,11 +240,13 @@ export function ClaudeSwitcherForOwner({
 
   const rows = (selectedGroup?.targets ?? []).map((target) => ({
     target,
-    inactiveUsage: target.id ? inactiveClaudeAccounts.find((a) => a.accountId === target.id) : null,
+    inactiveUsage: target.id
+      ? inactiveClaudeAccounts.find((a) => a.accountId === (target.usageAccountId ?? target.id))
+      : null,
     // Why local only: the hidden sign-in runs on this device, not a remote server.
     signInId: target.needsSignIn && !hasActiveRuntimeEnvironment ? target.id : null
   }))
-  const signedOutRows = rows.filter((row) => row.signInId)
+  const signedOutRows = rows.filter((row) => row.target.needsSignIn && !row.target.usableAccountId)
   // Why not the hook: this runs after an early return, so it must stay a plain call.
   const notCheckedDescription = t(
     'auto.components.status.bar.tooltip.claude.waiting.label',
@@ -256,7 +258,7 @@ export function ClaudeSwitcherForOwner({
     target: (typeof rows)[number]['target'],
     inactiveUsage: (typeof rows)[number]['inactiveUsage']
   ): React.ReactNode => {
-    if (target.active && liveActiveUsage) {
+    if (target.active && !target.needsSignIn && liveActiveUsage) {
       return (
         <AccountUsageGauge
           limits={liveActiveUsage}
@@ -287,7 +289,7 @@ export function ClaudeSwitcherForOwner({
   }: (typeof rows)[number]): React.JSX.Element => (
     <AccountSwitchRowItem
       label={target.label}
-      detail={target.hint}
+      detail={target.detail ?? target.hint}
       active={target.active}
       key={`${selectedGroup?.key}:${target.id ?? 'system'}`}
       aria-description={
@@ -303,10 +305,14 @@ export function ClaudeSwitcherForOwner({
       disabled={
         isSwitching ||
         signingInId !== null ||
-        (signInId === null && (target.active || target.disabled))
+        target.active ||
+        (signInId === null && target.disabled)
       }
       onSelect={(event) => {
         event.preventDefault()
+        if (target.active) {
+          return
+        }
         if (signInId) {
           void handleSignIn(signInId)
         } else if (!target.active) {
@@ -324,7 +330,7 @@ export function ClaudeSwitcherForOwner({
         ) : undefined
       }
     >
-      {signInId ? null : rowUsage(target, inactiveUsage)}
+      {target.needsSignIn && !target.usableAccountId ? null : rowUsage(target, inactiveUsage)}
     </AccountSwitchRowItem>
   )
 
@@ -341,6 +347,13 @@ export function ClaudeSwitcherForOwner({
         'Open Claude details and account switcher'
       )}
       variant="account"
+      accountStatus={
+        selectedGroup?.targets.some((target) => target.active && target.needsSignIn) ? (
+          <div role="status" className="font-medium">
+            {t('auto.components.status.bar.StatusBar.signedOutAccounts', 'Signed out')}
+          </div>
+        ) : undefined
+      }
       accountLabel={
         !hasActiveRuntimeEnvironment
           ? (selectedGroup?.targets.find((target) => target.active)?.label ??
@@ -374,7 +387,7 @@ export function ClaudeSwitcherForOwner({
           openSettingsPage()
         }}
       >
-        {rows.filter((row) => !row.signInId).map(renderRow)}
+        {rows.filter((row) => !row.target.needsSignIn || row.target.usableAccountId).map(renderRow)}
         {signedOutRows.length > 0 ? (
           <>
             <AccountSwitchSignedOutHeading />

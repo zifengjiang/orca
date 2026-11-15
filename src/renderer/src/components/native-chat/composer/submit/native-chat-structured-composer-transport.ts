@@ -48,6 +48,8 @@ export type NativeChatStructuredComposerTransport = {
   acceptsImages?: boolean
   /** The session's context usage; null until the journal can state it. */
   contextUsage?: StructuredAgentContextUsage | null
+  /** Presentation owner of a staged composer; its transport and attachments remain local. */
+  pendingCreationId?: string
   worktreeId?: string
   /** Present only where the host can set this session's goal. */
   threadGoal?: { setObjective: (objective: string) => Promise<boolean> }

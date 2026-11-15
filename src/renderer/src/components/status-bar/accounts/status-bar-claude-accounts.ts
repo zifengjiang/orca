@@ -1,3 +1,4 @@
+import { claudeAccountIdentityKey } from '../../../../../shared/claude-account-identity'
 import type { GlobalSettings } from '../../../../../shared/global-settings-types'
 import type { ClaudeRateLimitAccountsState } from '../../../../../shared/managed-account-types'
 import { translate } from '@/i18n/i18n'
@@ -11,6 +12,36 @@ import {
 } from './status-bar-runtime-targets'
 
 type ClaudeStatusAccount = ClaudeRateLimitAccountsState['accounts'][number]
+
+function accountIdentities(accounts: ClaudeStatusAccount[], activeId: string | null) {
+  const identities = new Map<
+    string,
+    {
+      selected?: ClaudeStatusAccount
+      representative: ClaudeStatusAccount
+      usable?: ClaudeStatusAccount
+    }
+  >()
+  const prefer = (left: ClaudeStatusAccount, right: ClaudeStatusAccount) =>
+    Number(!!left.runsOnSystemDefault) - Number(!!right.runsOnSystemDefault) ||
+    right.updatedAt - left.updatedAt ||
+    left.id.localeCompare(right.id)
+  for (const account of accounts) {
+    const key = claudeAccountIdentityKey(account) ?? `record:${account.id}`
+    const current = identities.get(key) ?? { representative: account }
+    if (account.id === activeId) {
+      current.selected = account
+    }
+    if (!account.needsSignIn && (!current.usable || prefer(account, current.usable) < 0)) {
+      current.usable = account
+    }
+    if (prefer(account, current.representative) < 0) {
+      current.representative = account
+    }
+    identities.set(key, current)
+  }
+  return [...identities.values()]
+}
 
 function getSingleConcreteClaudeWslDistro(state: ClaudeRateLimitAccountsState): string | null {
   const keys = new Set<string>()
@@ -79,6 +110,7 @@ export function buildClaudeStatusSwitchGroups(
   const makeGroup = (target: CodexStatusRuntimeTarget): ClaudeStatusSwitchGroup => {
     const activeId = getClaudeStatusActiveId(state, target)
     const accountsForTarget = getClaudeStatusAccountsForTarget(state, target)
+    const identities = accountIdentities(accountsForTarget, activeId)
     return {
       key: getCodexStatusRuntimeKey(target),
       label: getCodexStatusRuntimeLabel(target, options.hostLabel),
@@ -90,22 +122,44 @@ export function buildClaudeStatusSwitchGroups(
           active: activeId === null,
           runtimeTarget: target
         },
-        ...accountsForTarget.map((account) => ({
-          id: account.id,
-          label: account.email,
-          active: account.id === activeId,
-          runtimeTarget: target,
-          ...(account.needsSignIn
-            ? {
-                disabled: true,
-                needsSignIn: true,
-                hint: translate(
-                  'accounts.claude.signInRequired',
-                  'Sign in again to use this account'
-                )
-              }
-            : {})
-        }))
+        ...identities.map(({ selected, representative, usable }) => {
+          const account = selected ?? usable ?? representative
+          const signedOut = !!account.needsSignIn
+          const organization =
+            account.organizationName?.trim() ||
+            (account.organizationUuid?.trim()
+              ? translate('accounts.claude.organizationSuffix', 'Organization ···{{suffix}}', {
+                  suffix: account.organizationUuid.trim().slice(-4)
+                })
+              : translate('accounts.claude.personalOrganization', 'Personal'))
+          return {
+            id: account.id,
+            usageAccountId: usable?.id ?? account.id,
+            usableAccountId: usable?.id ?? null,
+            label: account.email,
+            active: selected !== undefined,
+            runtimeTarget: target,
+            detail: [
+              organization,
+              target.runtime === 'wsl' ? getCodexStatusRuntimeLabel(target) : null,
+              signedOut
+                ? translate('auto.components.status.bar.StatusBar.signedOutAccounts', 'Signed out')
+                : null
+            ]
+              .filter(Boolean)
+              .join(' · '),
+            ...(signedOut
+              ? {
+                  disabled: true,
+                  needsSignIn: true,
+                  hint: translate(
+                    'accounts.claude.signInRequired',
+                    'Sign in again to use this account'
+                  )
+                }
+              : {})
+          }
+        })
       ]
     }
   }
@@ -163,6 +217,7 @@ function getClaudeStatusAccountsFromSettings(
   // Why: settings carry the fresh selection; host rows own what only the host reads (login, cover).
   const hostRows = new Map(runtimeState.accounts.map((account) => [account.id, account]))
   return {
+    ...runtimeState,
     accounts: settings.claudeManagedAccounts
       .map(
         (account): ClaudeStatusAccount =>
@@ -209,15 +264,22 @@ export function resolveClaudeStatusAccountState(
 }
 
 export function signedInClaudeAccountCount(state: ClaudeRateLimitAccountsState): number {
-  const signedIn = state.accounts.filter(
-    (account) =>
-      account.managedAuthRuntime !== 'wsl' && !account.needsSignIn && !account.runsOnSystemDefault
+  const identities = new Set(
+    state.accounts
+      .filter(
+        (account) =>
+          account.managedAuthRuntime !== 'wsl' &&
+          !account.needsSignIn &&
+          !account.runsOnSystemDefault
+      )
+      .map((account) => claudeAccountIdentityKey(account) ?? `record:${account.id}`)
   )
-  return (
-    signedIn.length +
-    (state.systemDefaultEmail &&
-    !signedIn.some((account) => account.email === state.systemDefaultEmail)
-      ? 1
-      : 0)
-  )
+  const systemDefault = claudeAccountIdentityKey({
+    email: state.systemDefaultEmail,
+    organizationUuid: state.systemDefaultOrganizationUuid
+  })
+  if (systemDefault) {
+    identities.add(systemDefault)
+  }
+  return identities.size
 }

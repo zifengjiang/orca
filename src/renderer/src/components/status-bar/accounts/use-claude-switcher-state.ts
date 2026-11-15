@@ -14,7 +14,7 @@ export function useClaudeSwitcherState(
 ) {
   const hasActiveRuntimeEnvironment = activeRuntimeEnvironmentId !== null
   const inactiveClaudeAccounts = useAppStore((s) =>
-    chatAction?.target.kind === 'environment' ? EMPTY_INACTIVE : s.rateLimits.inactiveClaudeAccounts
+    hasActiveRuntimeEnvironment ? EMPTY_INACTIVE : s.rateLimits.inactiveClaudeAccounts
   )
   const claudeTarget = useAppStore((s) => (chatAction ? undefined : s.rateLimits.claudeTarget))
   const settings = useAppStore((s) => (chatAction ? null : s.settings))
