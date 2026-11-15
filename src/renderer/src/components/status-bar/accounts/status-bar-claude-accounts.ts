@@ -140,11 +140,11 @@ export function buildClaudeStatusSwitchGroups(
             active: selected !== undefined,
             runtimeTarget: target,
             detail: [
-              organization,
-              target.runtime === 'wsl' ? getCodexStatusRuntimeLabel(target) : null,
               signedOut
                 ? translate('auto.components.status.bar.StatusBar.signedOutAccounts', 'Signed out')
-                : null
+                : null,
+              organization,
+              target.runtime === 'wsl' ? getCodexStatusRuntimeLabel(target) : null
             ]
               .filter(Boolean)
               .join(' · '),
